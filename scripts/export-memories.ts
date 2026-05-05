@@ -14,8 +14,9 @@ import type {
 
 async function exportMemories(query: string, outputFile: string, project?: string) {
   try {
-    const settings = SettingsDefaultsManager.loadFromFile(join(homedir(), '.claude-mem', 'settings.json'));
-    const port = parseInt(settings.CLAUDE_MEM_WORKER_PORT, 10);
+    const dataDir = process.env.CLAUDE_MEM_DATA_DIR || join(homedir(), '.claude-mem');
+    const settings = SettingsDefaultsManager.loadFromFile(join(dataDir, 'settings.json'));
+    const port = parseInt(process.env.CLAUDE_MEM_WORKER_PORT || settings.CLAUDE_MEM_WORKER_PORT, 10);
     const baseUrl = `http://localhost:${port}`;
 
     console.log(`🔍 Searching for: "${query}"${project ? ` (project: ${project})` : ' (all projects)'}`);
@@ -56,7 +57,7 @@ async function exportMemories(query: string, outputFile: string, project?: strin
       const sessionsResponse = await fetch(`${baseUrl}/api/sdk-sessions/batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sdkSessionIds: Array.from(memorySessionIds) })
+        body: JSON.stringify({ memorySessionIds: Array.from(memorySessionIds) })
       });
       if (sessionsResponse.ok) {
         sessions = await sessionsResponse.json();
